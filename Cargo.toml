@@ -12,8 +12,8 @@ name = "microfetch"
 path = "src/main.rs"
 
 [dependencies]
-nix = { version = "0.30", features = ["fs", "hostname", "feature"] }
-libc = "0.2"
+nix = { version = "0.30.1", default-features = false, features = ["fs", "hostname", "feature"] }
+libc = "0.2.175"
 
 [dev-dependencies]
 criterion = "0.7"
