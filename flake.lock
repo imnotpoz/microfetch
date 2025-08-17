@@ -4,9 +4,12 @@
       "locked": {
         "lastModified": 1743359643,
         "narHash": "sha256-RkyJ9a67s0zEIz4O66TyZOIGh4TFZ4dKHKMgnxZCh2I=",
+        "lastModified": 1763381801,
+        "narHash": "sha256-325fR0JmHW7B74/gHPv/S9w1Rfj/M2HniwQFUwdrZ9k=",
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "ca77b4bc80e558ce59f2712fdb276f90c0ee309a",
+        "rev": "46931757ea8bdbba25c076697f8e73b8dc39fef5",
         "type": "github"
       },
       "original": {
