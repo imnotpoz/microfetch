@@ -1,5 +1,5 @@
 [package]
-name = "microfetch"
+name    = "microfetch"
 version = "0.4.9"
 edition = "2024"
 
@@ -12,28 +12,52 @@ name = "microfetch"
 path = "src/main.rs"
 
 [dependencies]
-nix = { version = "0.30.1", default-features = false, features = ["fs", "hostname", "feature"] }
 libc = "0.2.175"
+nix  = { default-features = false, features = [ "fs", "hostname", "feature" ], version = "0.30.1" }
 
 [dev-dependencies]
 criterion = "0.7"
 
 [[bench]]
-name = "benchmark"
 harness = false
+name    = "benchmark"
 
 [profile.dev]
-opt-level = 3
+opt-level = 1
 
 [profile.release]
-strip = true
-opt-level = "s"
-lto = true
 codegen-units = 1
-panic = "abort"
+lto           = true
+opt-level     = "s"
+panic         = "abort"
+strip         = true
 
 [profile.profiler]
-inherits = "release"
-debug = true
+debug           = true
+inherits        = "release"
 split-debuginfo = "unpacked"
-strip = "none"
+strip           = "none"
+
+[lints.clippy]
+complexity = { level = "warn", priority = -1 }
+nursery    = { level = "warn", priority = -1 }
+pedantic   = { level = "warn", priority = -1 }
+perf       = { level = "warn", priority = -1 }
+style      = { level = "warn", priority = -1 }
+
+# The lint groups above enable some less-than-desirable rules, we should manually
+# enable those to keep our sanity.
+absolute_paths                 = "allow"
+arbitrary_source_item_ordering = "allow"
+implicit_return                = "allow"
+missing_docs_in_private_items  = "allow"
+non_ascii_literal              = "allow"
+pattern_type_mismatch          = "allow"
+print_stdout                   = "allow"
+question_mark_used             = "allow"
+similar_names                  = "allow"
+single_call_fn                 = "allow"
+std_instead_of_core            = "allow"
+too_long_first_doc_paragraph   = "allow"
+too_many_lines                 = "allow"
+unused_trait_names             = "allow"
