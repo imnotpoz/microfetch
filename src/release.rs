@@ -21,6 +21,11 @@ pub fn get_system_info(utsname: &UtsName) -> String {
   result
 }
 
+/// Gets the pretty name of the OS from `/etc/os-release`.
+///
+/// # Errors
+///
+/// Returns an error if `/etc/os-release` cannot be read.
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_os_pretty_name() -> Result<String, io::Error> {
   // We use a stack-allocated buffer here, which seems to perform MUCH better

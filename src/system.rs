@@ -49,7 +49,13 @@ pub fn get_shell() -> String {
     .to_owned()
 }
 
+/// Gets the root disk usage information.
+///
+/// # Errors
+///
+/// Returns an error if the filesystem information cannot be retrieved.
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
+#[allow(clippy::cast_precision_loss)]
 pub fn get_root_disk_usage() -> Result<String, io::Error> {
   let vfs = statvfs("/")?;
   let block_size = vfs.block_size() as u64;
@@ -75,6 +81,11 @@ pub fn get_root_disk_usage() -> Result<String, io::Error> {
   Ok(result)
 }
 
+/// Gets the system memory usage information.
+///
+/// # Errors
+///
+/// Returns an error if `/proc/meminfo` cannot be read.
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_memory_usage() -> Result<String, io::Error> {
   #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -109,6 +120,7 @@ pub fn get_memory_usage() -> Result<String, io::Error> {
   }
 
   let (used_memory, total_memory) = parse_memory_info()?;
+  #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
   let percentage_used = (used_memory / total_memory * 100.0).round() as u64;
 
   let mut result = String::with_capacity(64);

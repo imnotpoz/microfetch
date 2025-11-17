@@ -1,5 +1,10 @@
 use std::{fmt::Write, io, mem::MaybeUninit};
 
+/// Gets the current system uptime.
+///
+/// # Errors
+///
+/// Returns an error if the system uptime cannot be retrieved.
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_current() -> Result<String, io::Error> {
   let uptime_seconds = {
@@ -7,6 +12,7 @@ pub fn get_current() -> Result<String, io::Error> {
     if unsafe { libc::sysinfo(info.as_mut_ptr()) } != 0 {
       return Err(io::Error::last_os_error());
     }
+    #[allow(clippy::cast_sign_loss)]
     unsafe { info.assume_init().uptime as u64 }
   };
 
