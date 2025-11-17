@@ -1,10 +1,13 @@
 mod colors;
 mod desktop;
 mod release;
+mod syscall;
 mod system;
 mod uptime;
 
 use std::io::{Write, stdout};
+
+pub use microfetch_lib::UtsName;
 
 use crate::{
   colors::print_dots,
@@ -24,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   if Some("--version") == std::env::args().nth(1).as_deref() {
     println!("Microfetch {}", env!("CARGO_PKG_VERSION"));
   } else {
-    let utsname = nix::sys::utsname::uname()?;
+    let utsname = UtsName::uname()?;
     let fields = Fields {
       user_info:      get_username_and_hostname(&utsname),
       os_name:        get_os_pretty_name()?,

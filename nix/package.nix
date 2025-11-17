@@ -20,6 +20,7 @@ in
           (fs.fileFilter (file: builtins.any file.hasExt ["rs"]) (s + /src))
           (s + /Cargo.lock)
           (s + /Cargo.toml)
+          (s + /benches)
         ];
       };
 

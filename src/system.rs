@@ -1,13 +1,6 @@
-use std::{
-  env,
-  fmt::Write as _,
-  fs::File,
-  io::{self, Read},
-};
+use std::{env, fmt::Write as _, io, mem::MaybeUninit};
 
-use nix::sys::{statvfs::statvfs, utsname::UtsName};
-
-use crate::colors::COLORS;
+use crate::{UtsName, colors::COLORS, syscall::read_file_fast};
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -57,10 +50,17 @@ pub fn get_shell() -> String {
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 #[allow(clippy::cast_precision_loss)]
 pub fn get_root_disk_usage() -> Result<String, io::Error> {
-  let vfs = statvfs("/")?;
-  let block_size = vfs.block_size() as u64;
-  let total_blocks = vfs.blocks();
-  let available_blocks = vfs.blocks_available();
+  let mut vfs = MaybeUninit::uninit();
+  let path = b"/\0";
+
+  if unsafe { libc::statvfs(path.as_ptr().cast(), vfs.as_mut_ptr()) } != 0 {
+    return Err(io::Error::last_os_error());
+  }
+
+  let vfs = unsafe { vfs.assume_init() };
+  let block_size = vfs.f_bsize;
+  let total_blocks = vfs.f_blocks;
+  let available_blocks = vfs.f_bavail;
 
   let total_size = block_size * total_blocks;
   let used_size = total_size - (block_size * available_blocks);
@@ -81,6 +81,20 @@ pub fn get_root_disk_usage() -> Result<String, io::Error> {
   Ok(result)
 }
 
+/// Fast integer parsing without stdlib overhead
+#[inline]
+fn parse_u64_fast(s: &[u8]) -> u64 {
+  let mut result = 0u64;
+  for &byte in s {
+    if byte.is_ascii_digit() {
+      result = result * 10 + u64::from(byte - b'0');
+    } else {
+      break;
+    }
+  }
+  result
+}
+
 /// Gets the system memory usage information.
 ///
 /// # Errors
@@ -90,30 +104,54 @@ pub fn get_root_disk_usage() -> Result<String, io::Error> {
 pub fn get_memory_usage() -> Result<String, io::Error> {
   #[cfg_attr(feature = "hotpath", hotpath::measure)]
   fn parse_memory_info() -> Result<(f64, f64), io::Error> {
-    let mut total_memory_kb = 0.0;
-    let mut available_memory_kb = 0.0;
-    let mut meminfo = String::with_capacity(2048);
+    let mut total_memory_kb = 0u64;
+    let mut available_memory_kb = 0u64;
+    let mut buffer = [0u8; 2048];
 
-    File::open("/proc/meminfo")?.read_to_string(&mut meminfo)?;
+    // Use fast syscall-based file reading
+    let bytes_read = read_file_fast("/proc/meminfo", &mut buffer)?;
+    let meminfo = &buffer[..bytes_read];
 
-    for line in meminfo.lines() {
-      let mut split = line.split_whitespace();
-      match split.next().unwrap_or_default() {
-        "MemTotal:" => {
-          total_memory_kb = split.next().unwrap_or("0").parse().unwrap_or(0.0);
-        },
-        "MemAvailable:" => {
-          available_memory_kb =
-            split.next().unwrap_or("0").parse().unwrap_or(0.0);
-          // MemTotal comes before MemAvailable, stop parsing
-          break;
-        },
-        _ => (),
+    // Fast scanning for MemTotal and MemAvailable
+    let mut offset = 0;
+    let mut found_total = false;
+    let mut found_available = false;
+
+    while offset < meminfo.len() && (!found_total || !found_available) {
+      let remaining = &meminfo[offset..];
+
+      // Find newline or end
+      let line_end = remaining
+        .iter()
+        .position(|&b| b == b'\n')
+        .unwrap_or(remaining.len());
+      let line = &remaining[..line_end];
+
+      if line.starts_with(b"MemTotal:") {
+        // Skip "MemTotal:" and whitespace
+        let mut pos = 9;
+        while pos < line.len() && line[pos].is_ascii_whitespace() {
+          pos += 1;
+        }
+        total_memory_kb = parse_u64_fast(&line[pos..]);
+        found_total = true;
+      } else if line.starts_with(b"MemAvailable:") {
+        // Skip "MemAvailable:" and whitespace
+        let mut pos = 13;
+        while pos < line.len() && line[pos].is_ascii_whitespace() {
+          pos += 1;
+        }
+        available_memory_kb = parse_u64_fast(&line[pos..]);
+        found_available = true;
       }
+
+      offset += line_end + 1;
     }
 
-    let total_memory_gb = total_memory_kb / 1024.0 / 1024.0;
-    let available_memory_gb = available_memory_kb / 1024.0 / 1024.0;
+    #[allow(clippy::cast_precision_loss)]
+    let total_memory_gb = total_memory_kb as f64 / 1024.0 / 1024.0;
+    #[allow(clippy::cast_precision_loss)]
+    let available_memory_gb = available_memory_kb as f64 / 1024.0 / 1024.0;
     let used_memory_gb = total_memory_gb - available_memory_gb;
 
     Ok((used_memory_gb, total_memory_gb))

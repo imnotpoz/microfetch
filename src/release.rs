@@ -1,10 +1,6 @@
-use std::{
-  fmt::Write as _,
-  fs::File,
-  io::{self, Read},
-};
+use std::{fmt::Write as _, io};
 
-use nix::sys::utsname::UtsName;
+use crate::{UtsName, syscall::read_file_fast};
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -28,21 +24,46 @@ pub fn get_system_info(utsname: &UtsName) -> String {
 /// Returns an error if `/etc/os-release` cannot be read.
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_os_pretty_name() -> Result<String, io::Error> {
-  // We use a stack-allocated buffer here, which seems to perform MUCH better
-  // than `BufReader`. In hindsight, I should've seen this coming.
-  let mut buffer = String::with_capacity(1024);
-  File::open("/etc/os-release")?.read_to_string(&mut buffer)?;
+  // Fast byte-level scanning for PRETTY_NAME=
+  const PREFIX: &[u8] = b"PRETTY_NAME=";
 
-  for line in buffer.lines() {
-    if let Some(pretty_name) = line.strip_prefix("PRETTY_NAME=") {
-      if let Some(trimmed) = pretty_name
-        .strip_prefix('"')
-        .and_then(|s| s.strip_suffix('"'))
+  let mut buffer = [0u8; 1024];
+
+  // Use fast syscall-based file reading
+  let bytes_read = read_file_fast("/etc/os-release", &mut buffer)?;
+  let content = &buffer[..bytes_read];
+
+  let mut offset = 0;
+
+  while offset < content.len() {
+    let remaining = &content[offset..];
+
+    // Find newline or end
+    let line_end = remaining
+      .iter()
+      .position(|&b| b == b'\n')
+      .unwrap_or(remaining.len());
+    let line = &remaining[..line_end];
+
+    if line.starts_with(PREFIX) {
+      let value = &line[PREFIX.len()..];
+
+      // Strip quotes if present
+      let trimmed = if value.len() >= 2
+        && value[0] == b'"'
+        && value[value.len() - 1] == b'"'
       {
-        return Ok(trimmed.to_owned());
-      }
-      return Ok(pretty_name.to_owned());
+        &value[1..value.len() - 1]
+      } else {
+        value
+      };
+
+      // Convert to String - should be valid UTF-8
+      return Ok(String::from_utf8_lossy(trimmed).into_owned());
     }
+
+    offset += line_end + 1;
   }
+
   Ok("Unknown".to_owned())
 }
