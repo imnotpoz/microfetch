@@ -1,5 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use microfetch_lib::{
+  UtsName,
   colors::print_dots,
   desktop::get_desktop_info,
   release::{get_os_pretty_name, get_system_info},
@@ -13,7 +14,7 @@ use microfetch_lib::{
 };
 
 fn main_benchmark(c: &mut Criterion) {
-  let utsname = nix::sys::utsname::uname().expect("lol");
+  let utsname = UtsName::uname().expect("Failed to get uname");
   c.bench_function("user_info", |b| {
     b.iter(|| get_username_and_hostname(&utsname));
   });
