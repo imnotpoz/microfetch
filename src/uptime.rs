@@ -13,7 +13,9 @@ pub fn get_current() -> Result<String, io::Error> {
       return Err(io::Error::last_os_error());
     }
     #[allow(clippy::cast_sign_loss)]
-    unsafe { info.assume_init().uptime as u64 }
+    unsafe {
+      info.assume_init().uptime as u64
+    }
   };
 
   let days = uptime_seconds / 86400;
