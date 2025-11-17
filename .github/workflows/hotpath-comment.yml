@@ -13,7 +13,7 @@ jobs:
   comment:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
+
     steps:
       - name: Download profiling results
         uses: actions/download-artifact@v4
@@ -21,37 +21,29 @@ jobs:
           name: hotpath-results
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-      
+
       - name: Read PR number
         id: pr
         run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
-      
+
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Install hotpath CLI
         run: cargo install hotpath
-      
+
       - name: Post timing comparison comment
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          hotpath profile-pr \
-            --repo ${{ github.repository }} \
-            --pr-number ${{ steps.pr.outputs.number }} \
-            --head-json head-timing.json \
-            --base-json base-timing.json \
-            --mode timing \
-            --title "⏱️ Hotpath Timing Profile"
-      
-      - name: Post allocation comparison comment
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          hotpath profile-pr \
-            --repo ${{ github.repository }} \
-            --pr-number ${{ steps.pr.outputs.number }} \
-            --head-json head-alloc.json \
-            --base-json base-alloc.json \
-            --mode alloc \
-            --title "📊 Hotpath Allocation Profile"
+         run: |
+           hotpath profile-pr \
+             --head-metrics head-timing.json \
+             --base-metrics base-timing.json \
+             --github-token ${{ secrets.GITHUB_TOKEN }} \
+             --pr-number ${{ steps.pr.outputs.number }}
+
+       - name: Post allocation comparison comment
+         run: |
+           hotpath profile-pr \
+             --head-metrics head-alloc.json \
+             --base-metrics base-alloc.json \
+             --github-token ${{ secrets.GITHUB_TOKEN }} \
+             --pr-number ${{ steps.pr.outputs.number }}
