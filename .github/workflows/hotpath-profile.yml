@@ -1,0 +1,63 @@
+name: Hotpath Profile
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR HEAD
+        uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      
+      - name: Run timing profiling on HEAD
+        env:
+          HOTPATH_JSON: "true"
+        run: |
+          cargo run --features='hotpath' 2>&1 | grep '^{"hotpath_profiling_mode"' > head-timing.json
+      
+      - name: Run allocation profiling on HEAD
+        env:
+          HOTPATH_JSON: "true"
+        run: |
+          cargo run --features='hotpath,hotpath-alloc-count-total' 2>&1 | grep '^{"hotpath_profiling_mode"' > head-alloc.json
+      
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      
+      - name: Run timing profiling on base
+        env:
+          HOTPATH_JSON: "true"
+        run: |
+          cargo run --features='hotpath' 2>&1 | grep '^{"hotpath_profiling_mode"' > base-timing.json
+      
+      - name: Run allocation profiling on base
+        env:
+          HOTPATH_JSON: "true"
+        run: |
+          cargo run --features='hotpath,hotpath-alloc-count-total' 2>&1 | grep '^{"hotpath_profiling_mode"' > base-alloc.json
+      
+      - name: Save PR number
+        run: echo "${{ github.event.number }}" > pr_number.txt
+      
+      - name: Upload profiling results
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotpath-results
+          path: |
+            head-timing.json
+            head-alloc.json
+            base-timing.json
+            base-alloc.json
+            pr_number.txt
+          retention-days: 1
