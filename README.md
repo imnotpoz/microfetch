@@ -43,7 +43,7 @@ on your system: it is pretty _[fast](#benchmarks)_...
 - Fast
 - Really fast
 - Minimal dependencies
-- Tiny binary (~410kb)
+- Tiny binary (~370kb)
 - Actually really fast
 - Cool NixOS logo (other, inferior, distros are not supported)
 - Reliable detection of following info:
@@ -160,7 +160,8 @@ performance regressions.
 
 > [!NOTE]
 > You will need a Nerdfonts patched font installed, and for your terminal
-> emulator to support said font. Microfetch uses nerdfonts glyphs by default.
+> emulator to support said font. Microfetch uses nerdfonts glyphs by default,
+> but this can be changed by [patching the program](#customizing).
 
 Microfetch is packaged in [nixpkgs](https://github.com/nixos/nixpkgs). It can be
 installed by adding `pkgs.microfetch` to your `environment.systemPackages`.
