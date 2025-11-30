@@ -151,7 +151,7 @@ HOTPATH_JSON=true cargo run --features=hotpath
 To profile allocations:
 
 ```bash
-HOTPATH_JSON=true cargo run --features=hotpath,hotpath-alloc-count-total
+HOTPATH_JSON=true cargo run --features=hotpath,hotpath-alloc
 ```
 
 The JSON output can be analyzed with the `hotpath` CLI tool for detailed
