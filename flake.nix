@@ -10,9 +10,12 @@
     forEachSystem = nixpkgs.lib.genAttrs systems;
     pkgsForEach = nixpkgs.legacyPackages;
   in {
-    packages = forEachSystem (system: {
+    packages = forEachSystem (system: let
+      pkgs = pkgsForEach.${system};
+    in {
       default = self.packages.${system}.microfetch;
-      microfetch = pkgsForEach.${system}.callPackage ./nix/package.nix {};
+      microfetch = pkgs.callPackage ./nix/package.nix {};
+      microfetch-mold = pkgs.callPackage ./nix/package.nix {useMold = true;};
     });
 
     devShells = forEachSystem (system: {

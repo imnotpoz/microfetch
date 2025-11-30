@@ -43,7 +43,7 @@ on your system: it is pretty _[fast](#benchmarks)_...
 - Fast
 - Really fast
 - Minimal dependencies
-- Tiny binary (~370kb)
+- Tiny binary (~370kb [^1])
 - Actually really fast
 - Cool NixOS logo (other, inferior, distros are not supported)
 - Reliable detection of following info:
@@ -59,6 +59,9 @@ on your system: it is pretty _[fast](#benchmarks)_...
   - Shell Colors
 - Did I mention fast?
 - Respects [`NO_COLOR` spec](https://no-color.org/)
+
+[^1]: With the Mold linker, which is enabled by default in the Flake package,
+    the binary size is roughly 350kb. That's nearly 20kb reduction in size :)
 
 ## Motivation
 

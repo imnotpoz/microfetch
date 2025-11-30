@@ -1,14 +1,22 @@
 {
   lib,
-  rustPlatform,
+  stdenv,
   stdenvAdapters,
+  rustPlatform,
   llvm,
+  useMold ? stdenv.isLinux && !stdenv.hostPlatform.isAarch,
 }: let
   toml = (lib.importTOML ../Cargo.toml).package;
   pname = toml.name;
   inherit (toml) version;
+
+  # Select stdenv based on useMold flag
+  stdenv =
+    if useMold
+    then stdenvAdapters.useMoldLinker llvm.stdenv
+    else llvm.stdenv;
 in
-  rustPlatform.buildRustPackage.override {stdenv = stdenvAdapters.useMoldLinker llvm.stdenv;} {
+  rustPlatform.buildRustPackage.override {inherit stdenv;} {
     inherit pname version;
     src = let
       fs = lib.fileset;
@@ -26,7 +34,14 @@ in
 
     cargoLock.lockFile = ../Cargo.lock;
     enableParallelBuilding = true;
-    env.RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
+    buildNoDefaultFeatures = true;
+    doCheck = false;
+
+    # Only set RUSTFLAGS for mold if useMold is enabled
+    env = lib.optionalAttrs useMold {
+      CARGO_LINKER = "clang";
+      RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
+    };
 
     meta = {
       description = "Microscopic fetch script in Rust, for NixOS systems";
