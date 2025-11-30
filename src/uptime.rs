@@ -1,6 +1,6 @@
 use std::{io, mem::MaybeUninit};
 
-/// Fast integer to string conversion (no formatting overhead)
+/// Faster integer to string conversion without the formatting overhead.
 #[inline]
 fn itoa(mut n: u64, buf: &mut [u8]) -> &str {
   if n == 0 {
@@ -17,9 +17,10 @@ fn itoa(mut n: u64, buf: &mut [u8]) -> &str {
   unsafe { std::str::from_utf8_unchecked(&buf[i..]) }
 }
 
-/// Direct sysinfo syscall using inline assembly
+/// Direct `sysinfo` syscall using inline assembly
 ///
 /// # Safety
+///
 /// This function uses inline assembly to make a direct syscall.
 /// The caller must ensure the sysinfo pointer is valid.
 #[inline]

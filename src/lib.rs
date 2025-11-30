@@ -14,7 +14,8 @@ impl UtsName {
   /// Calls `uname` syscall and returns a `UtsName` wrapper
   ///
   /// # Errors
-  /// Returns an error if the uname syscall fails
+  ///
+  /// Returns an error if the `uname` syscall fails
   pub fn uname() -> Result<Self, std::io::Error> {
     let mut uts = MaybeUninit::uninit();
     if unsafe { libc::uname(uts.as_mut_ptr()) } != 0 {

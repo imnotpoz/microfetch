@@ -12,17 +12,16 @@ name = "microfetch"
 path = "src/main.rs"
 
 [dependencies]
-hotpath = { optional = true, version = "0.6.0" }
+hotpath = { optional = true, version = "0.7.5" }
 libc    = "0.2.177"
 
 [dev-dependencies]
-criterion = "0.7"
+criterion = "0.8.0"
 
 [features]
-hotpath                   = [ "dep:hotpath", "hotpath/hotpath" ]
-hotpath-alloc-bytes-total = [ "hotpath/hotpath-alloc-bytes-total" ]
-hotpath-alloc-count-total = [ "hotpath/hotpath-alloc-count-total" ]
-hotpath-off               = [ "hotpath/hotpath-off" ]
+hotpath       = [ "dep:hotpath", "hotpath/hotpath" ]
+hotpath-alloc = [ "hotpath/hotpath-alloc" ]
+hotpath-off   = [ "hotpath/hotpath-off" ]
 
 [[bench]]
 harness = false

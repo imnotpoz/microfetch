@@ -11,11 +11,15 @@
 use std::io;
 
 /// Direct syscall to open a file
-/// Returns file descriptor or -1 on error
+///
+/// # Returns
+///
+/// File descriptor or -1 on error
 ///
 /// # Safety
 ///
 /// The caller must ensure:
+///
 /// - `path` points to a valid null-terminated C string
 /// - The pointer remains valid for the duration of the syscall
 #[inline]
@@ -65,7 +69,10 @@ pub unsafe fn sys_open(path: *const u8, flags: i32) -> i32 {
 }
 
 /// Direct syscall to read from a file descriptor
-/// Returns number of bytes read or -1 on error
+///
+/// # Returns n
+///
+/// Number of bytes read or -1 on error
 ///
 /// # Safety
 ///
