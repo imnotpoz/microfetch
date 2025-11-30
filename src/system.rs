@@ -1,11 +1,18 @@
-use std::{env, fmt::Write as _, io, mem::MaybeUninit};
+use std::{ffi::CStr, fmt::Write as _, io, mem::MaybeUninit};
 
 use crate::{UtsName, colors::COLORS, syscall::read_file_fast};
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_username_and_hostname(utsname: &UtsName) -> String {
-  let username = env::var("USER").unwrap_or_else(|_| "unknown_user".to_owned());
+  let username = unsafe {
+    let ptr = libc::getenv(c"USER".as_ptr());
+    if ptr.is_null() {
+      "unknown_user"
+    } else {
+      CStr::from_ptr(ptr).to_str().unwrap_or("unknown_user")
+    }
+  };
   let hostname = utsname.nodename().to_str().unwrap_or("unknown_host");
 
   let capacity = COLORS.yellow.len()
@@ -18,7 +25,7 @@ pub fn get_username_and_hostname(utsname: &UtsName) -> String {
   let mut result = String::with_capacity(capacity);
 
   result.push_str(COLORS.yellow);
-  result.push_str(&username);
+  result.push_str(username);
   result.push_str(COLORS.red);
   result.push('@');
   result.push_str(COLORS.green);
@@ -31,15 +38,17 @@ pub fn get_username_and_hostname(utsname: &UtsName) -> String {
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_shell() -> String {
-  let shell_path =
-    env::var("SHELL").unwrap_or_else(|_| "unknown_shell".to_owned());
+  unsafe {
+    let ptr = libc::getenv(c"SHELL".as_ptr());
+    if ptr.is_null() {
+      return "unknown_shell".into();
+    }
 
-  // Find last '/' and get the part after it, avoiding allocation
-  shell_path
-    .rsplit('/')
-    .next()
-    .unwrap_or("unknown_shell")
-    .to_owned()
+    let bytes = CStr::from_ptr(ptr).to_bytes();
+    let start = bytes.iter().rposition(|&b| b == b'/').map_or(0, |i| i + 1);
+    let name = std::str::from_utf8_unchecked(&bytes[start..]);
+    name.into()
+  }
 }
 
 /// Gets the root disk usage information.
@@ -106,7 +115,7 @@ pub fn get_memory_usage() -> Result<String, io::Error> {
   fn parse_memory_info() -> Result<(f64, f64), io::Error> {
     let mut total_memory_kb = 0u64;
     let mut available_memory_kb = 0u64;
-    let mut buffer = [0u8; 2048];
+    let mut buffer = [0u8; 1024];
 
     // Use fast syscall-based file reading
     let bytes_read = read_file_fast("/proc/meminfo", &mut buffer)?;

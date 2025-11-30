@@ -1,22 +1,27 @@
-use std::fmt::Write;
+use std::{ffi::CStr, fmt::Write};
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_desktop_info() -> String {
   // Retrieve the environment variables and handle Result types
-  let desktop_env = std::env::var("XDG_CURRENT_DESKTOP");
-  let display_backend = std::env::var("XDG_SESSION_TYPE");
-
-  let desktop_str = match desktop_env {
-    Err(_) => "Unknown",
-    Ok(ref s) if s.starts_with("none+") => &s[5..],
-    Ok(ref s) => s.as_str(),
+  let desktop_str = unsafe {
+    let ptr = libc::getenv(c"XDG_CURRENT_DESKTOP".as_ptr());
+    if ptr.is_null() {
+      "Unknown"
+    } else {
+      let s = CStr::from_ptr(ptr).to_str().unwrap_or("Unknown");
+      s.strip_prefix("none+").unwrap_or(s)
+    }
   };
 
-  let backend_str = match display_backend {
-    Err(_) => "Unknown",
-    Ok(ref s) if s.is_empty() => "Unknown",
-    Ok(ref s) => s.as_str(),
+  let backend_str = unsafe {
+    let ptr = libc::getenv(c"XDG_SESSION_TYPE".as_ptr());
+    if ptr.is_null() {
+      "Unknown"
+    } else {
+      let s = CStr::from_ptr(ptr).to_str().unwrap_or("Unknown");
+      if s.is_empty() { "Unknown" } else { s }
+    }
   };
 
   // Pre-calculate capacity: desktop_len + " (" + backend_len + ")"
