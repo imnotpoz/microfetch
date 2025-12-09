@@ -1,4 +1,4 @@
-use std::{env, sync::LazyLock};
+use std::sync::LazyLock;
 
 pub struct Colors {
   pub reset:   &'static str,
@@ -37,8 +37,8 @@ impl Colors {
 }
 
 pub static COLORS: LazyLock<Colors> = LazyLock::new(|| {
-  // Check for NO_COLOR once at startup
-  let is_no_color = env::var("NO_COLOR").is_ok();
+  const NO_COLOR: *const libc::c_char = c"NO_COLOR".as_ptr();
+  let is_no_color = unsafe { !libc::getenv(NO_COLOR).is_null() };
   Colors::new(is_no_color)
 });
 

@@ -5,7 +5,7 @@ mod syscall;
 mod system;
 mod uptime;
 
-use std::io::{Write, stdout};
+use std::io::{self, Cursor, Write};
 
 pub use microfetch_lib::UtsName;
 
@@ -81,7 +81,13 @@ fn print_system_info(
   let cyan = COLORS.cyan;
   let blue = COLORS.blue;
   let reset = COLORS.reset;
-  let system_info = format!("
+
+  let mut buf = [0u8; 2048];
+  let mut cursor = Cursor::new(&mut buf[..]);
+
+  write!(
+    cursor,
+    "
     {cyan}     ▟█▖    {blue}▝█▙ ▗█▛         {user_info} ~{reset}
     {cyan}  ▗▄▄▟██▄▄▄▄▄{blue}▝█▙█▛  {cyan}▖       {cyan}  {blue}System{reset}        {os_name}
     {cyan}  ▀▀▀▀▀▀▀▀▀▀▀▘{blue}▝██  {cyan}▟█▖      {cyan}  {blue}Kernel{reset}        {kernel_version}
@@ -90,7 +96,17 @@ fn print_system_info(
     {blue}   ▟█▛{cyan}▗█▖       {cyan}▟█▛         {cyan}  {blue}Desktop{reset}       {desktop}
     {blue}  ▝█▛  {cyan}██▖{blue}▗▄▄▄▄▄▄▄▄▄▄▄      {cyan}  {blue}Memory{reset}        {memory_usage}
     {blue}   ▝  {cyan}▟█▜█▖{blue}▀▀▀▀▀██▛▀▀▘      {cyan}󱥎  {blue}Storage (/){reset}   {storage}
-    {cyan}     ▟█▘ ▜█▖    {blue}▝█▛         {cyan}  {blue}Colors{reset}        {colors}\n\n");
+    {cyan}     ▟█▘ ▜█▖    {blue}▝█▛         {cyan}  {blue}Colors{reset}        {colors}\n\n"
+  )?;
 
-  Ok(stdout().write_all(system_info.as_bytes())?)
+  let len = cursor.position() as usize;
+  // Direct syscall to avoid stdout buffering allocation
+  let written = unsafe { libc::write(libc::STDOUT_FILENO, buf.as_ptr().cast(), len) };
+  if written < 0 {
+    return Err(io::Error::last_os_error().into());
+  }
+  if written as usize != len {
+    return Err(io::Error::new(io::ErrorKind::WriteZero, "partial write to stdout").into());
+  }
+  Ok(())
 }
