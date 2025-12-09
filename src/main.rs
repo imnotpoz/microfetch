@@ -107,5 +107,8 @@ fn print_system_info(
   if written < 0 {
     return Err(io::Error::last_os_error().into());
   }
+  if written as usize != len {
+    return Err(io::Error::new(io::ErrorKind::WriteZero, "partial write to stdout").into());
+  }
   Ok(())
 }
