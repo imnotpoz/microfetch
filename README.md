@@ -6,15 +6,11 @@
 </div>
 
 <div id="doc-begin" align="center">
-  <h1 id="header">
-    Microfetch
-  </h1>
-  <p>
-    Microscopic fetch tool in Rust, for NixOS systems, with special emphasis on speed
-  </p>
+  <h1 id="header">Microfetch</h1>
+  <p>Microscopic fetch tool in Rust, for NixOS systems, with special emphasis on speed</p>
   <br/>
   <a href="#synopsis">Synopsis</a><br/>
-  <a href="#features">Features</a> | <a href="#motivation">Motivation</a><br/>
+  <a href="#features">Features</a> | <a href="#motivation">Motivation</a><br/> | <a href="#benchmarks">Benchmarks</a><br/>
   <a href="#installation">Installation</a>
   <br/>
 </div>
@@ -65,34 +61,42 @@ on your system: it is pretty _[fast](#benchmarks)_...
 
 ## Motivation
 
-Fastfetch, as its name probably hinted, is a very fast fetch tool written in C.
-However, I am not interested in _any_ of its additional features, and I'm not
-interested in its configuration options. Sure I can _configure_ it when I
-dislike the defaults, but how often would I really change the configuration...
+[Rube-Goldmark Machine]: https://en.wikipedia.org/wiki/Rube_Goldberg_machine
 
-Microfetch is my response to this problem. It is an _even faster_ fetch tool
-that I would've written in Bash and put in my `~/.bashrc` but is _actually_
-incredibly fast because it opts out of all the customization options provided by
-tools such as Fastfetch. Ultimately, it's a small, opinionated binary with a
-nice size that doesn't bother me, and incredible speed. Customization? No thank
-you. I cannot re-iterate it enough, Microfetch is _annoyingly fast_.
+Fastfetch, as its name _probably_ already hinted, is a very fast fetch tool
+written in C. I used to use Fastfetch on my systems, but I eventually came to
+the realization that I am _not interested in any of its additional features_. I
+don't use Sixel, I don't change my configuration more than maybe once a year and
+I don't even display most of the fields that it does. Sure the configurability
+is nice and I can configure the defaults that I do not like but how often do I
+really do that?
 
-The project is written in Rust, which comes at the cost of "bloated" dependency
-trees and the increased build times, but we make an extended effort to keep the
-dependencies minimal and build times managable. The latter is also very easily
-mitigated with Nix's binary cache systems. Since Microfetch is already in
-Nixpkgs, you are recommended to use it to utilize the binary cache properly. The
-usage of Rust _is_ nice, however, since it provides us with incredible tooling
-and a very powerful language that allows for Microfetch to be as fast as
-possible. Sure C could've been used here as well, but do you think I hate
-myself?
+Since I already enjoy programming challenges, and don't use a fetch program that
+often, I eventually came to try and answer the question _how fast can I make my
+fetch script?_ It is an _even faster_ fetch tool that I would've written in Bash
+and put in my `~/.bashrc` but is _actually_ incredibly fast because it opts out
+of all the customization options provided by tools such as Fastfetch. Since
+Fetch scripts are kind of a coming-of-age ritual for most Linux users, I've
+decided to use it on my system. You also might be interested if you like the
+defaults and like speed.
 
-> [!IMPORTANT]
-> **Update as of November 30th, 2025**:
->
-> Microfetch now inlines handwritten assembly for even better performance. I
-> know I previously said I do not hate myself but I'm beginning to suspect this
-> is no longer the case. Enjoy the performance benefits!
+Ultimately, it's a small, opinionated binary with a nice size that doesn't
+bother me, and incredible speed. Customization? No thank you. I cannot
+re-iterate it enough, Microfetch is _annoyingly fast_. It does not, however,
+solve a technical problem. The "problem" Microfetch solves is entirely
+self-imposed. On the matter of _size_, the project is written in Rust, which
+comes at the cost of "bloated" dependency trees and the increased build times,
+but we make an extended effort to keep the dependencies minimal and build times
+managable. The latter is also very easily mitigated with Nix's binary cache
+systems. Since Microfetch is already in Nixpkgs, you are recommended to use it
+to utilize the binary cache properly. The usage of Rust _is_ nice, however,
+since it provides us with incredible tooling and a very powerful language that
+allows for Microfetch to be as fast as possible. ~~Sure C could've been used
+here as well, but do you think I hate myself?~~ Microfetch now features
+handwritten assembly to unsafely optimize some areas. In hindsight you all
+should have seen this coming. Is it faster? Yes.
+
+Also see: [Rube-Goldmark Machine]
 
 ## Benchmarks
 
@@ -200,17 +204,31 @@ You can't.
 
 ### Why?
 
-Customization, of any kind, is expensive: I could try reading environment
-variables, parse command-line arguments or read a configuration file but all of
-those increment execution time and resource consumption by a lot.
+Customization, of most kinds, are expensive: I could try reading environment
+variables, parse command-line arguments or read a configuration file to allow
+configuring various fields but those inflate execution time and the resource
+consumption by a lot. Since Microfetch is closer to a code golf challenge than a
+program that attempts to fill a gap, I have elected not to make this trade.
 
 ### Really?
 
-To be fair, you _can_ customize Microfetch by, well, patching it. It's not the
-best way per se, but it will be the only way that does not compromise on speed.
+[main module]: ./src/main.rs
+[discussions tab]: https://github.com/NotAShelf/microfetch/discussions
+
+To be fair, you _can_ customize Microfetch by, well, patching it. It is
+certainly not the easiest way of doing so but if you are planning to change
+something in Microfetch, patching is the best way to go. It will also the only
+way that does not compromise on speed, unless you patch in bad code. Various
+users have adapted Microfetch to their distribution by patching the
+[main module] and inserting the logo of their choice. This is also the best way
+to go if you plan to make small changes. If your changes are not small, you
+might want to look for a program that is designed to be customizable; Microfetch
+is built for maximum performance.
 
 The Nix package allows passing patches in a streamlined manner by passing
-`.overrideAttrs` to the derivation.
+`.overrideAttrs` to the derivation. You can apply your patches in `patches` and
+share your derivations with people. Feel free to use the [discussions tab] to
+share your own variants of Microfetch!
 
 ## Contributing
 
@@ -222,13 +240,22 @@ Contributions that help improve performance in specific areas of Microfetch are
 welcome. Though, prepare to be bombarded with questions if your changes are
 large.
 
-## Hacking
+### Hacking
 
-A Nix flake is provided. `nix develop` to get started. Direnv users may simply
-run `direnv allow` to get started.
+A Nix flake is provided. You may use `nix develop` to get started. Direnv users
+may instead run `direnv allow` to get a complete environment with shell
+integration.
 
-Non-nix users will need `cargo` and `gcc` installed on their system, see
-`Cargo.toml` for available release profiles.
+Non-Nix user will need `cargo`, `clang` and `mold` installed on their system to
+build Microfetch. As Mold seems to yield _slightly_ better results than the
+default linker, it has been set as the default in `.cargo/config.toml` for
+x86-64 Linux. You may override those defaults using the `RUSTFLAGS` environment
+variable. For example:
+
+```sh
+# Use ld instead of Mold
+$ RUSTFLAGS="-C linker=/path/to/ld.lld" cargo build
+```
 
 ## Thanks
 
@@ -245,6 +272,7 @@ person about current issues. To list a few, special thanks to:
 - [@sioodmy](https://github.com/sioodmy) - Being cute
 - [@mewoocat](https://github.com/mewoocat) - The awesome NixOS logo ASCII used
   in Microfetch
+- [@uzaaft](https://github.com/uzaaft) - Helping me going faster
 
 Additionally a big thank you to everyone who used, talked about or criticized
 Microfetch. I might have missed your name here, but you have my thanks.
