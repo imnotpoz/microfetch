@@ -94,7 +94,7 @@ fn print_system_info(
     {blue}     ▟█▛       {blue}▝█▘{cyan}▟█▛       {cyan}  {blue}Shell{reset}         {shell}
     {blue}▟█████▛          {cyan}▟█████▛    {cyan}  {blue}Uptime{reset}        {uptime}
     {blue}   ▟█▛{cyan}▗█▖       {cyan}▟█▛         {cyan}  {blue}Desktop{reset}       {desktop}
-    {blue}  ▝█▛  {cyan}██▖{blue}▗▄▄▄▄▄▄▄▄▄▄▄      {cyan}  {blue}Memory{reset}        {memory_usage}
+    {blue}  ▝█▛  {cyan}██▖{blue}▗▄▄▄▄▄▄▄▄▄▄▄      {cyan}󰍛  {blue}Memory{reset}        {memory_usage}
     {blue}   ▝  {cyan}▟█▜█▖{blue}▀▀▀▀▀██▛▀▀▘      {cyan}󱥎  {blue}Storage (/){reset}   {storage}
     {cyan}     ▟█▘ ▜█▖    {blue}▝█▛         {cyan}  {blue}Colors{reset}        {colors}\n\n"
   )?;
