@@ -1,6 +1,14 @@
 use std::{ffi::CStr, fmt::Write as _, io, mem::MaybeUninit};
 
-use crate::{UtsName, colors::COLORS, syscall::read_file_fast};
+use crate::{colors::COLORS, last_os_error, syscall::read_file_fast, UtsName};
+
+#[inline]
+#[cold]
+const fn unknown_user() -> &'static str { "unknown_user" }
+
+#[inline]
+#[cold]
+const fn unknown_host() -> &'static str { "unknown_host" }
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -8,12 +16,12 @@ pub fn get_username_and_hostname(utsname: &UtsName) -> String {
   let username = unsafe {
     let ptr = libc::getenv(c"USER".as_ptr());
     if ptr.is_null() {
-      "unknown_user"
+      unknown_user()
     } else {
-      CStr::from_ptr(ptr).to_str().unwrap_or("unknown_user")
+      CStr::from_ptr(ptr).to_str().unwrap_or_else(|_| unknown_user())
     }
   };
-  let hostname = utsname.nodename().to_str().unwrap_or("unknown_host");
+  let hostname = utsname.nodename().to_str().unwrap_or_else(|_| unknown_host());
 
   let capacity = COLORS.yellow.len()
     + username.len()
@@ -35,13 +43,17 @@ pub fn get_username_and_hostname(utsname: &UtsName) -> String {
   result
 }
 
+#[inline]
+#[cold]
+const fn unknown_shell() -> &'static str { "unknown_shell" }
+
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_shell() -> String {
   unsafe {
     let ptr = libc::getenv(c"SHELL".as_ptr());
     if ptr.is_null() {
-      return "unknown_shell".into();
+      return unknown_shell().into();
     }
 
     let bytes = CStr::from_ptr(ptr).to_bytes();
@@ -63,7 +75,7 @@ pub fn get_root_disk_usage() -> Result<String, io::Error> {
   let path = b"/\0";
 
   if unsafe { libc::statvfs(path.as_ptr().cast(), vfs.as_mut_ptr()) } != 0 {
-    return Err(io::Error::last_os_error());
+    return last_os_error();
   }
 
   let vfs = unsafe { vfs.assume_init() };

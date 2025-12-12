@@ -6,7 +6,13 @@ pub mod syscall;
 pub mod system;
 pub mod uptime;
 
-use std::mem::MaybeUninit;
+use std::{io, mem::MaybeUninit};
+
+#[inline]
+#[cold]
+pub fn last_os_error<T>() -> io::Result<T> {
+  Err(io::Error::last_os_error())
+}
 
 /// Wrapper for `libc::utsname` with safe accessor methods
 pub struct UtsName(libc::utsname);
@@ -20,7 +26,7 @@ impl UtsName {
   pub fn uname() -> Result<Self, std::io::Error> {
     let mut uts = MaybeUninit::uninit();
     if unsafe { libc::uname(uts.as_mut_ptr()) } != 0 {
-      return Err(std::io::Error::last_os_error());
+      return last_os_error();
     }
     Ok(Self(unsafe { uts.assume_init() }))
   }

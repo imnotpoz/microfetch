@@ -8,7 +8,7 @@ mod uptime;
 
 use std::io::{self, Cursor, Write};
 
-pub use microfetch_lib::UtsName;
+pub use microfetch_lib::{UtsName, last_os_error};
 
 use crate::{
   desktop::get_desktop_info,

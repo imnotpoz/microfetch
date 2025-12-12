@@ -1,5 +1,7 @@
 use std::{io, mem::MaybeUninit};
 
+use crate::last_os_error;
+
 /// Faster integer to string conversion without the formatting overhead.
 #[inline]
 fn itoa(mut n: u64, buf: &mut [u8]) -> &str {
@@ -73,7 +75,7 @@ pub fn get_current() -> Result<String, io::Error> {
   let uptime_seconds = {
     let mut info = MaybeUninit::uninit();
     if unsafe { sys_sysinfo(info.as_mut_ptr()) } != 0 {
-      return Err(io::Error::last_os_error());
+      return last_os_error();
     }
     #[allow(clippy::cast_sign_loss)]
     unsafe {

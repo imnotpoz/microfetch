@@ -10,6 +10,8 @@
 
 use std::io;
 
+use crate::last_os_error;
+
 /// Direct syscall to open a file
 ///
 /// # Returns
@@ -169,6 +171,12 @@ pub unsafe fn sys_close(fd: i32) -> i32 {
   }
 }
 
+#[inline]
+#[cold]
+fn path_too_long() -> io::Result<usize> {
+  Err(io::Error::new(io::ErrorKind::InvalidInput, "Path too long"))
+}
+
 /// Read entire file using direct syscalls. This avoids libc overhead and can be
 /// significantly faster for small files.
 ///
@@ -182,7 +190,7 @@ pub fn read_file_fast(path: &str, buffer: &mut [u8]) -> io::Result<usize> {
   // Use stack-allocated buffer for null-terminated path (max 256 bytes)
   let path_bytes = path.as_bytes();
   if path_bytes.len() >= 256 {
-    return Err(io::Error::new(io::ErrorKind::InvalidInput, "Path too long"));
+    return path_too_long();
   }
 
   let mut path_buf = [0u8; 256];
@@ -192,14 +200,14 @@ pub fn read_file_fast(path: &str, buffer: &mut [u8]) -> io::Result<usize> {
   unsafe {
     let fd = sys_open(path_buf.as_ptr(), O_RDONLY);
     if fd < 0 {
-      return Err(io::Error::last_os_error());
+      return last_os_error();
     }
 
     let bytes_read = sys_read(fd, buffer.as_mut_ptr(), buffer.len());
     let _ = sys_close(fd);
 
     if bytes_read < 0 {
-      return Err(io::Error::last_os_error());
+      return last_os_error();
     }
 
     #[allow(clippy::cast_sign_loss)]

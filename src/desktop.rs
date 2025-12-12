@@ -1,5 +1,9 @@
 use std::ffi::CStr;
 
+#[inline]
+#[cold]
+const fn unknown() -> &'static str { "Unknown" }
+
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_desktop_info() -> String {
@@ -7,9 +11,9 @@ pub fn get_desktop_info() -> String {
   let desktop_str = unsafe {
     let ptr = libc::getenv(c"XDG_CURRENT_DESKTOP".as_ptr());
     if ptr.is_null() {
-      "Unknown"
+      unknown()
     } else {
-      let s = CStr::from_ptr(ptr).to_str().unwrap_or("Unknown");
+      let s = CStr::from_ptr(ptr).to_str().unwrap_or_else(|_| unknown());
       s.strip_prefix("none+").unwrap_or(s)
     }
   };
@@ -17,10 +21,10 @@ pub fn get_desktop_info() -> String {
   let backend_str = unsafe {
     let ptr = libc::getenv(c"XDG_SESSION_TYPE".as_ptr());
     if ptr.is_null() {
-      "Unknown"
+      unknown()
     } else {
-      let s = CStr::from_ptr(ptr).to_str().unwrap_or("Unknown");
-      if s.is_empty() { "Unknown" } else { s }
+      let s = CStr::from_ptr(ptr).to_str().unwrap_or_else(|_| unknown());
+      if s.is_empty() { unknown() } else { s }
     }
   };
 
