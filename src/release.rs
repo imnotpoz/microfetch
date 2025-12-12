@@ -1,4 +1,4 @@
-use std::{fmt::Write as _, io};
+use std::io;
 
 use crate::{UtsName, syscall::read_file_fast};
 
@@ -13,7 +13,13 @@ pub fn get_system_info(utsname: &UtsName) -> String {
   let capacity = sysname.len() + 1 + release.len() + 2 + machine.len() + 1;
   let mut result = String::with_capacity(capacity);
 
-  write!(result, "{sysname} {release} ({machine})").unwrap();
+  result.push_str(sysname);
+  result.push(' ');
+  result.push_str(release);
+  result.push(' ');
+  result.push('(');
+  result.push_str(machine);
+  result.push(')');
   result
 }
 
