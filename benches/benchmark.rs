@@ -1,8 +1,8 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use microfetch_lib::{
   UtsName,
-  colors::print_dots,
   desktop::get_desktop_info,
+  dots::print_dots,
   release::{get_os_pretty_name, get_system_info},
   system::{
     get_memory_usage,

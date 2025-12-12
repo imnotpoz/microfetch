@@ -1,5 +1,6 @@
 mod colors;
 mod desktop;
+mod dots;
 mod release;
 mod syscall;
 mod system;
@@ -10,8 +11,8 @@ use std::io::{self, Cursor, Write};
 pub use microfetch_lib::UtsName;
 
 use crate::{
-  colors::print_dots,
   desktop::get_desktop_info,
+  dots::print_dots,
   release::{get_os_pretty_name, get_system_info},
   system::{
     get_memory_usage,
@@ -37,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       uptime:         get_current()?,
       memory_usage:   get_memory_usage()?,
       storage:        get_root_disk_usage()?,
-      colors:         print_dots(),
+      dots:         print_dots(),
     };
     print_system_info(&fields)?;
   }
@@ -57,7 +58,7 @@ struct Fields {
   desktop:        String,
   memory_usage:   String,
   storage:        String,
-  colors:         String,
+  dots:           &'static str,
 }
 
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -75,7 +76,7 @@ fn print_system_info(
     desktop,
     memory_usage,
     storage,
-    colors,
+    dots,
   } = fields;
 
   let cyan = COLORS.cyan;
@@ -96,7 +97,7 @@ fn print_system_info(
     {blue}   ▟█▛{cyan}▗█▖       {cyan}▟█▛         {cyan}  {blue}Desktop{reset}       {desktop}
     {blue}  ▝█▛  {cyan}██▖{blue}▗▄▄▄▄▄▄▄▄▄▄▄      {cyan}󰍛  {blue}Memory{reset}        {memory_usage}
     {blue}   ▝  {cyan}▟█▜█▖{blue}▀▀▀▀▀██▛▀▀▘      {cyan}󱥎  {blue}Storage (/){reset}   {storage}
-    {cyan}     ▟█▘ ▜█▖    {blue}▝█▛         {cyan}  {blue}Colors{reset}        {colors}\n\n"
+    {cyan}     ▟█▘ ▜█▖    {blue}▝█▛         {cyan}  {blue}Colors{reset}        {dots}\n\n"
   )?;
 
   let len = cursor.position() as usize;

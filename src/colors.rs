@@ -1,5 +1,22 @@
 use std::sync::LazyLock;
 
+// All this because concat!() doesn't accept const parameters
+// See https://github.com/rust-lang/rust/issues/31383
+#[macro_export]
+macro_rules! RESET    {() => {"\x1b[0m"}}
+#[macro_export]
+macro_rules! BLUE     {() => {"\x1b[34m"}}
+#[macro_export]
+macro_rules! CYAN     {() => {"\x1b[34m"}}
+#[macro_export]
+macro_rules! GREEN    {() => {"\x1b[32m"}}
+#[macro_export]
+macro_rules! YELLOW   {() => {"\x1b[33m"}}
+#[macro_export]
+macro_rules! RED      {() => {"\x1b[31m"}}
+#[macro_export]
+macro_rules! MAGENTA  {() => {"\x1b[35m"}}
+
 pub struct Colors {
   pub reset:   &'static str,
   pub blue:    &'static str,
@@ -7,7 +24,6 @@ pub struct Colors {
   pub green:   &'static str,
   pub yellow:  &'static str,
   pub red:     &'static str,
-  pub magenta: &'static str,
 }
 
 impl Colors {
@@ -20,62 +36,26 @@ impl Colors {
         green:   "",
         yellow:  "",
         red:     "",
-        magenta: "",
       }
     } else {
       Self {
-        reset:   "\x1b[0m",
-        blue:    "\x1b[34m",
-        cyan:    "\x1b[36m",
-        green:   "\x1b[32m",
-        yellow:  "\x1b[33m",
-        red:     "\x1b[31m",
-        magenta: "\x1b[35m",
+        reset:   RESET!(),
+        blue:    BLUE!(),
+        cyan:    CYAN!(),
+        green:   GREEN!(),
+        yellow:  YELLOW!(),
+        red:     RED!(),
       }
     }
   }
 }
 
-pub static COLORS: LazyLock<Colors> = LazyLock::new(|| {
+pub static IS_NO_COLOR: LazyLock<bool> = LazyLock::new(|| {
+  // Check for NO_COLOR once at startup
   const NO_COLOR: *const libc::c_char = c"NO_COLOR".as_ptr();
-  let is_no_color = unsafe { !libc::getenv(NO_COLOR).is_null() };
-  Colors::new(is_no_color)
+  unsafe { !libc::getenv(NO_COLOR).is_null() }
 });
 
-#[must_use]
-#[cfg_attr(feature = "hotpath", hotpath::measure)]
-pub fn print_dots() -> String {
-  // Pre-calculate capacity: 6 color codes + "  " (glyph + 2 spaces) per color
-  const GLYPH: &str = "";
-  let capacity = COLORS.blue.len()
-    + COLORS.cyan.len()
-    + COLORS.green.len()
-    + COLORS.yellow.len()
-    + COLORS.red.len()
-    + COLORS.magenta.len()
-    + COLORS.reset.len()
-    + (GLYPH.len() + 2) * 6;
-
-  let mut result = String::with_capacity(capacity);
-  result.push_str(COLORS.blue);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.cyan);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.green);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.yellow);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.red);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.magenta);
-  result.push_str(GLYPH);
-  result.push_str("  ");
-  result.push_str(COLORS.reset);
-
-  result
-}
+pub static COLORS: LazyLock<Colors> = LazyLock::new(|| {
+  Colors::new(*IS_NO_COLOR)
+});
