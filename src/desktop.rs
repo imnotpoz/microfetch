@@ -1,4 +1,4 @@
-use std::{ffi::CStr, fmt::Write};
+use std::ffi::CStr;
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -33,7 +33,7 @@ pub fn get_desktop_info() -> String {
 
   // Capitalize first character of backend
   if let Some(first_char) = backend_str.chars().next() {
-    let _ = write!(result, "{}", first_char.to_ascii_uppercase());
+    result.push(first_char.to_ascii_uppercase());
     result.push_str(&backend_str[first_char.len_utf8()..]);
   }
 
