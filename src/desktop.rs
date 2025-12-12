@@ -33,7 +33,8 @@ pub fn get_desktop_info() -> String {
   let mut result =
     String::with_capacity(desktop_str.len() + backend_str.len() + 3);
   result.push_str(desktop_str);
-  result.push_str(" (");
+  result.push(' ');
+  result.push('(');
 
   // Capitalize first character of backend
   if let Some(first_char) = backend_str.chars().next() {
