@@ -1,13 +1,13 @@
 use std::io;
 
-use crate::{UtsName, syscall::read_file_fast};
+use crate::{syscall::read_file_fast, unknown, UtsName};
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 pub fn get_system_info(utsname: &UtsName) -> String {
-  let sysname = utsname.sysname().to_str().unwrap_or("Unknown");
-  let release = utsname.release().to_str().unwrap_or("Unknown");
-  let machine = utsname.machine().to_str().unwrap_or("Unknown");
+  let sysname = utsname.sysname().to_str().unwrap_or_else(|_| unknown());
+  let release = utsname.release().to_str().unwrap_or_else(|_| unknown());
+  let machine = utsname.machine().to_str().unwrap_or_else(|_| unknown());
 
   // Pre-allocate capacity: sysname + " " + release + " (" + machine + ")"
   let capacity = sysname.len() + 1 + release.len() + 2 + machine.len() + 1;
@@ -71,5 +71,5 @@ pub fn get_os_pretty_name() -> Result<String, io::Error> {
     offset += line_end + 1;
   }
 
-  Ok("Unknown".to_owned())
+  Ok(unknown().to_owned())
 }

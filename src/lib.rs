@@ -10,6 +10,10 @@ use std::{io, mem::MaybeUninit};
 
 #[inline]
 #[cold]
+pub const fn unknown() -> &'static str { "Unknown" }
+
+#[inline]
+#[cold]
 pub fn last_os_error<T>() -> io::Result<T> {
   Err(io::Error::last_os_error())
 }

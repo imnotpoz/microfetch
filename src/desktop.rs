@@ -1,8 +1,6 @@
 use std::ffi::CStr;
 
-#[inline]
-#[cold]
-const fn unknown() -> &'static str { "Unknown" }
+use crate::unknown;
 
 #[must_use]
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
