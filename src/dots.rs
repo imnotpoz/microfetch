@@ -5,21 +5,21 @@ macro_rules! GLYPH  {() => {""}}
 macro_rules! GAP    {() => {"  "}}
 
 const NO_COLORS_STR: &str = concat!(
-    GLYPH!(), GAP!(),
-    GLYPH!(), GAP!(),
-    GLYPH!(), GAP!(),
-    GLYPH!(), GAP!(),
-    GLYPH!(), GAP!(),
-    GLYPH!(),
+  GLYPH!(), GAP!(),
+  GLYPH!(), GAP!(),
+  GLYPH!(), GAP!(),
+  GLYPH!(), GAP!(),
+  GLYPH!(), GAP!(),
+  GLYPH!(),
 );
 
 const COLORS_STR: &str = concat!(
-    BLUE!(),    GLYPH!(), GAP!(),
-    CYAN!(),    GLYPH!(), GAP!(),
-    GREEN!(),   GLYPH!(), GAP!(),
-    YELLOW!(),  GLYPH!(), GAP!(),
-    RED!(),     GLYPH!(), GAP!(),
-    MAGENTA!(), GLYPH!(), RESET!(),
+  BLUE!(),    GLYPH!(), GAP!(),
+  CYAN!(),    GLYPH!(), GAP!(),
+  GREEN!(),   GLYPH!(), GAP!(),
+  YELLOW!(),  GLYPH!(), GAP!(),
+  RED!(),     GLYPH!(), GAP!(),
+  MAGENTA!(), GLYPH!(), RESET!(),
 );
 
 #[must_use]

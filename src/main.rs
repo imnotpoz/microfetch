@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       uptime:         get_current()?,
       memory_usage:   get_memory_usage()?,
       storage:        get_root_disk_usage()?,
-      dots:         print_dots(),
+      dots:           print_dots(),
     };
     print_system_info(&fields)?;
   }
